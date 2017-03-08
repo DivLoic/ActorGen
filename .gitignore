@@ -79,7 +79,12 @@ project/plugins/project/
 .ensime_cache/
 .scala_dependencies
 .worksheet
+*.sc
 
 # ENSIME specific
 
 # End of https://www.gitignore.io/api/scala,intellij,sbt
+
+#
+src/main/resources/*.conf
+logs/
