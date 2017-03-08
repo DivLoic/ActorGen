@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "kudutag",
+  "fields": [
+    {"name": "host", "type": "string"},
+    {"name": "ts", "type": "string"},
+    {"name": "tag", "type": "string"},
+    {"name": "browser", "type": "string"},
+    {"name": "is_mobile", "type": "boolean"}
+  ]
+}
