@@ -66,4 +66,4 @@ object Browser extends Enumeration {
   val Chrome, Firefox, Safari, Opera, Edge = Value
 }
 
-case class Event(host: String, dt: String, tag: Tag.Value, browser: Browser.Value, mobile: Boolean)
+case class Event(host: String, ts: String, tag: Tag.Value, browser: Browser.Value, is_mobile: Boolean)

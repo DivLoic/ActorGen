@@ -2,6 +2,7 @@ package org.lmd.xke.kudu
 
 import akka.actor.ActorDSL.{actor, _}
 import akka.actor.{ActorRef, ActorSystem, _}
+import com.sksamuel.avro4s.{AvroOutputStream, AvroSchema}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.Logger
 import org.lmd.xke.kudu.source.KFeeder
@@ -12,6 +13,8 @@ import scala.concurrent.duration._
 
 /**
   * Created by loicmdivad on 14/02/2017.
+  * Start an actor system composed of 4 actors.
+  * All sub actors extend a kafka-producer wrapper and generate randoms event.s
   */
 object ActorKudu extends App {
 
@@ -60,6 +63,17 @@ object ActorKudu extends App {
 
 }
 
+/**
+  *
+  * @param master parent actor
+  * @param id name of the executor
+  * @param host kafka bootstrap server
+  * @param topic target kafka topic
+  * @param keySerde
+  * @param valueSerde
+  * @param schemaRegistry kafka schema registry
+  * @param schemaPath path to the events schema
+  */
 class Executor(master: ActorRef,
                id: String,
                host: String,
@@ -71,6 +85,8 @@ class Executor(master: ActorRef,
 
   extends KFeeder(host, topic, keySerde, valueSerde, schemaRegistry, schemaPath) with Actor {
 
+  println(AvroSchema[Event].toString())
+
   override def receive: Receive = {
     case _ =>
       val delta = Gen.choose(1, 4).sample.get
@@ -79,6 +95,7 @@ class Executor(master: ActorRef,
       context.system.scheduler.scheduleOnce(delta seconds, self, {
         logger debug tag.toString
         produce(tag)
+        println(schema.to(tag).toString)
       })
   }
 
