@@ -88,3 +88,4 @@ project/plugins/project/
 #
 src/main/resources/*.conf
 logs/
+*.jar
