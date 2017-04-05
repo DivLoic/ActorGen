@@ -89,3 +89,9 @@ project/plugins/project/
 src/main/resources/*.conf
 logs/
 *.jar
+
+
+/src/main/scala/org/lmd/xke/kudu/ActorMowerTwo.scala
+/src/main/scala/org/lmd/xke/kudu/ActorMowerFour.scala
+/src/main/scala/org/lmd/xke/kudu/ActorMowerThree.scala
+/src/main/scala/org/lmd/xke/kudu/ActorMowerLate.scala

@@ -2,10 +2,10 @@ package org.lmd.xke.kudu
 
 import akka.actor.ActorDSL.{actor, _}
 import akka.actor.{ActorRef, ActorSystem, _}
-import com.sksamuel.avro4s.{AvroOutputStream, AvroSchema}
+import com.sksamuel.avro4s.{AvroSchema, RecordFormat}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.Logger
-import org.lmd.xke.kudu.source.KFeeder
+import org.lmd.xke.kudu.web.{TagEvent, TagEventGenerator}
 import org.scalacheck.Gen
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -19,7 +19,7 @@ import scala.concurrent.duration._
 object ActorKudu extends App {
 
   lazy val logger: Logger = Logger("main")
-  lazy val conf: Config = ConfigFactory.load("kudufeeder")
+  lazy val conf: Config = ConfigFactory.load("xke-kudu")
 
   implicit val system = ActorSystem()
 
@@ -29,8 +29,7 @@ object ActorKudu extends App {
     conf.getString("kafka.topic"),
     conf.getString("kafka.serde.key"),
     conf.getString("kafka.serde.value"),
-    conf.getString("kafka.schema.registry.url"),
-    conf.getString("kafka.schema.template")
+    conf.getString("kafka.schema.registry.url")
   ))
 
   val master = actor(new Act{
@@ -72,29 +71,28 @@ object ActorKudu extends App {
   * @param keySerde
   * @param valueSerde
   * @param schemaRegistry kafka schema registry
-  * @param schemaPath path to the events schema
   */
 class Executor(master: ActorRef,
-               id: String,
-               host: String,
-               topic: String,
-               keySerde: String,
-               valueSerde: String,
-               schemaRegistry: String,
-               schemaPath: String)
+                  id: String,
+                  host: String,
+                  topic: String,
+                  keySerde: String,
+                  valueSerde: String,
+                  schemaRegistry: String)
 
-  extends KFeeder(host, topic, keySerde, valueSerde, schemaRegistry, schemaPath) with Actor {
+  extends KFeeder(host, topic, keySerde, valueSerde, schemaRegistry) with Actor {
 
-  println(AvroSchema[Event].toString())
+  val generator = new TagEventGenerator()
+
+  val schema: RecordFormat[TagEvent] = RecordFormat[TagEvent]
 
   override def receive: Receive = {
     case _ =>
       val delta = Gen.choose(1, 4).sample.get
-      val tag = tagEvent.tagFactory(id)
+      val tag = generator.build(id)
 
       context.system.scheduler.scheduleOnce(delta seconds, self, {
-        logger debug tag.toString
-        produce(tag)
+        //produce(tag)
         println(schema.to(tag).toString)
       })
   }

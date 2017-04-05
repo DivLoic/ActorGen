@@ -1,24 +1,24 @@
-package org.lmd.xke.kudu
+package org.lmd.xke.kudu.web
 
 import org.joda.time.DateTime
+import org.lmd.xke.kudu.EventGenerator
+import org.lmd.xke.kudu.web.Browser._
+import org.lmd.xke.kudu.web.Tag._
 import org.scalacheck.Gen
 
 /**
-  * Created by loicmdivad on 03/03/2017.
+  * Created by loicmdivad on 25/03/2017.
   */
-class TagEvent {
+class TagEventGenerator extends EventGenerator[TagEvent] {
 
-  import Browser._
-  import Tag._
-
-  def tagFactory(hostName: String): Event = {
+  override def build(id: String): TagEvent = {
 
     val isMobile = Gen.frequency((7, false),(3, true)).sample.get
 
     val genNode = for {
       tag <- tagGen(None)
       browser <- browserGen(isMobile)
-    } yield Event(hostName, DateTime.now().toString("yyyy-MM-dd HH:mm:ss"), tag, browser, isMobile)
+    } yield TagEvent(id, DateTime.now().toString("yyyy-MM-dd HH:mm:ss"), tag, browser, isMobile)
 
     genNode.sample.get
 
@@ -54,16 +54,5 @@ class TagEvent {
 
     Gen.frequency((probs.head, Chrome), (probs(1), Firefox), (probs(2), Safari), (probs(3), Opera), (probs(4), Edge))
   }
-}
 
-object Tag extends Enumeration {
-  type Tag = Value
-  val Data, Mobile, Back, Front = Value
 }
-
-object Browser extends Enumeration {
-  type Browser = Value
-  val Chrome, Firefox, Safari, Opera, Edge = Value
-}
-
-case class Event(host: String, ts: String, tag: Tag.Value, browser: Browser.Value, is_mobile: Boolean)

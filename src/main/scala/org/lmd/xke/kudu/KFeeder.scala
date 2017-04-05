@@ -1,29 +1,23 @@
-package org.lmd.xke.kudu.source
+package org.lmd.xke.kudu
 
-import com.sksamuel.avro4s.RecordFormat
 import com.typesafe.scalalogging.Logger
 import org.apache.avro.generic.GenericData.Record
+import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.producer.{Callback, KafkaProducer, ProducerRecord, RecordMetadata}
-import org.lmd.xke.kudu.{Event, TagEvent}
 
 /**
   * Created by loicmdivad on 14/02/2017.
   * Wrapper for kafka producer.
   */
 abstract class KFeeder(host: String,
-              topic: String,
-              keySerde: String,
-              valueSerde: String,
-              schemaRegistry: String,
-              schemaPath: String) {
+                          topic: String,
+                          keySerde: String,
+                          valueSerde: String,
+                          schemaRegistry: String) {
 
   import scala.collection.JavaConversions._
 
   lazy val logger: Logger = Logger("main")
-
-  val tagEvent: TagEvent = new TagEvent()
-
-  val schema: RecordFormat[Event] = RecordFormat[Event]
 
   val producer = new KafkaProducer[String, Record](Map[String, String](
     "bootstrap.servers" -> host,
@@ -36,9 +30,9 @@ abstract class KFeeder(host: String,
     *
     * @param event
     */
-  def produce(event: Event): Unit = {
+  def produce(event: GenericRecord): Unit = {
 
-    val message = schema.to(event).asInstanceOf[Record]
+    val message = event.asInstanceOf[Record]
 
     val record: ProducerRecord[String, Record] = new ProducerRecord(this.topic, message)
 
