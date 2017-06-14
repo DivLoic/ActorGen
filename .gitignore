@@ -95,3 +95,8 @@ logs/
 /src/main/scala/org/lmd/xke/kudu/ActorMowerFour.scala
 /src/main/scala/org/lmd/xke/kudu/ActorMowerThree.scala
 /src/main/scala/org/lmd/xke/kudu/ActorMowerLate.scala
+
+/kuduproducer/src/main/scala/org/lmd/xke/kudu/ActorMowerTwo.scala
+/kuduproducer/src/main/scala/org/lmd/xke/kudu/ActorMowerFour.scala
+/kuduproducer/src/main/scala/org/lmd/xke/kudu/ActorMowerThree.scala
+/kuduproducer/src/main/scala/org/lmd/xke/kudu/ActorMowerLate.scala
