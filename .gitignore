@@ -86,10 +86,6 @@ project/plugins/project/
 # End of https://www.gitignore.io/api/scala,intellij,sbt
 
 #
-src/main/resources/*.conf
+**resources/**/*.conf
 logs/
 *.jar
-
-
-!**/resources/*/*.template.conf
-**/resources/*/*.conf
