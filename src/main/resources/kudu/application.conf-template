@@ -1,0 +1,11 @@
+kafka {
+  host = "localhost:9092"
+  topic = "guild"
+  serde.key = "io.confluent.kafka.serializers.KafkaAvroSerializer"
+  serde.value = "io.confluent.kafka.serializers.KafkaAvroSerializer"
+  schema.registry.url = "http://localhost:8081"
+}
+
+kudu {
+
+}
