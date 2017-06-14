@@ -1,14 +1,15 @@
 package org.lmd.xke.kudu
 
-import akka.actor.ActorDSL.{actor, _}
-import akka.actor.{ActorRef, ActorSystem, _}
-import com.sksamuel.avro4s.{AvroSchema, RecordFormat}
+import akka.actor.ActorDSL._
+import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import com.sksamuel.avro4s.RecordFormat
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.Logger
 import org.lmd.xke.kudu.web.{TagEvent, TagEventGenerator}
 import org.scalacheck.Gen
 
 import scala.concurrent.ExecutionContext.Implicits.global
+
 import scala.concurrent.duration._
 
 /**
@@ -19,7 +20,7 @@ import scala.concurrent.duration._
 object ActorKudu extends App {
 
   lazy val logger: Logger = Logger("main")
-  lazy val conf: Config = ConfigFactory.load("xke-kudu")
+  lazy val conf: Config = ConfigFactory.load()
 
   implicit val system = ActorSystem()
 
@@ -92,8 +93,7 @@ class Executor(master: ActorRef,
       val tag = generator.build(id)
 
       context.system.scheduler.scheduleOnce(delta seconds, self, {
-        //produce(tag)
-        println(schema.to(tag).toString)
+        produce(schema.to(tag))
       })
   }
 

@@ -1,14 +1,16 @@
 package org.lmd.xke.kudu
 
-import akka.actor.ActorDSL.{actor, _}
+
+import akka.actor.ActorDSL._
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import com.sksamuel.avro4s.{AvroSchema, RecordFormat}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.Logger
 import org.lmd.xke.kudu.mower.{MowerEvent, MowerEventGenerator}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+
+import scala.concurrent.ExecutionContext.Implicits.global
 
 /**
   * Created by loicmdivad on 01/04/2017.
@@ -20,8 +22,8 @@ object ActorMower extends App {
 
   implicit val system = ActorSystem()
 
-  def execFactory(id: String): ActorRef =  system.actorOf(Props.create(classOf[ActorMowerExec],
-    master, id,
+  def execFactory(id: String, v: String, median: String): ActorRef =  system.actorOf(Props.create(classOf[ActorMowerExec],
+    master, v, median, id,
     conf.getString("kafka.host"),
     conf.getString("kafka.topic"),
     conf.getString("kafka.serde.key"),
@@ -35,10 +37,10 @@ object ActorMower extends App {
 
     whenStarting {
 
-      executors += "actor-mower-0" -> execFactory("actor-mower-0")
-      executors += "actor-mower-1" -> execFactory("actor-mower-1")
-      executors += "actor-mower-2" -> execFactory("actor-mower-2")
-      executors += "actor-mower-3" -> execFactory("actor-mower-3")
+      executors += "actor-mower-0" -> execFactory("actor-mower-0", "7d77-3a9a3933", "45.0")
+      executors += "actor-mower-1" -> execFactory("actor-mower-1", "9cf4-8d2d442f", "10.0")
+      executors += "actor-mower-2" -> execFactory("actor-mower-2", "060b-602c6eb0", "75.0")
+      executors += "actor-mower-3" -> execFactory("actor-mower-3", "9cf4-8d2d442f", "10.0")
 
     }
 
@@ -61,29 +63,32 @@ object ActorMower extends App {
 }
 
 class ActorMowerExec(master: ActorRef,
-               id: String,
-               host: String,
-               topic: String,
-               keySerde: String,
-               valueSerde: String,
-               schemaRegistry: String)
+                     v: String,
+                     median: String,
+                     id: String,
+                     host: String,
+                     topic: String,
+                     keySerde: String,
+                     valueSerde: String,
+                     schemaRegistry: String)
 
   extends KFeeder(host, topic, keySerde, valueSerde, schemaRegistry) with Actor {
 
-  val frequency = 0.5
-  val generator = new MowerEventGenerator(frequency)
+  val frequency = 0.2
+  val generator = new MowerEventGenerator(frequency, median.toDouble)
 
   val schema: String = AvroSchema[MowerEvent].toString
   val format: RecordFormat[MowerEvent] = RecordFormat[MowerEvent]
 
-  logger debug s"$id is configure to send records with the following schema - $schema"
+  //logger debug s"$id is configure to send records with the following schema - $schema"
 
   override def receive: Receive = {
     case msg: String =>
-      context.system.scheduler.scheduleOnce(frequency seconds, self, generator.build(id))
+      context.system.scheduler.scheduleOnce(frequency seconds, self, generator.build(id, v))
 
     case mower: MowerEvent =>
-      context.system.scheduler.scheduleOnce(0.5 seconds, self, {
+      context.system.scheduler.scheduleOnce(frequency seconds, self, {
+        //println(format.to(mower).toString)
         produce(format.to(mower))
         generator.next(mower)
       })

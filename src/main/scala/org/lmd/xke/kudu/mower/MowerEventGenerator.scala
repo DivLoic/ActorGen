@@ -5,59 +5,63 @@ import org.joda.time.DateTime
 import org.lmd.xke.kudu.EventGenerator
 import org.scalacheck.Gen
 
-
 /**
   * Created by loicmdivad on 01/04/2017.
   */
-class MowerEventGenerator(frequency: Double) extends EventGenerator[MowerEvent]{
+class MowerEventGenerator(frequency: Double, median: Double) extends EventGenerator[MowerEvent]{
 
-  import  MowerEventGenerator._
+  import MowerEventGenerator._
 
   val chiSpeed = ChiSquared(1)
   val gaussianHeat = Gaussian(mu = 0, sigma = 5.5)
   val gaussianRevolution = Gaussian(mu = 0, sigma = 1.5)
 
-  override def build(id: String): MowerEvent = MowerEvent(
-    ts = DateTime.now().toString("yyyy-MM-dd HH:mm:ss"),
+  //val median: Double = Gen.choose(-50.0, 50.0).sample.get
+  //val median: Double = Gen.choose(0.0, 30.0).sample.get
+
+  override def build(id: String, v: String): MowerEvent = MowerEvent(
+    ts = DateTime.now().plusHours(6).toString("yyyy-MM-dd HH:mm:ss.SSS"),
     revolution = MIN_REVOLUTION,
-    heat = MIN_HEAT + 1,
+    heat = (MIN_HEAT + median) + 1,
     speed = 0.0,
-    elapsedTime = 0.0, // elapsed
-    host = id
+    elapsed = 0.0,
+    host = id,
+    version = v
   )
 
   def next(mowerEvent: MowerEvent): MowerEvent = MowerEvent(
     host = mowerEvent.host,
-    ts = DateTime.now().toString("yyyy-MM-dd HH:mm:ss"),
+    ts = DateTime.now().plusHours(6).toString("yyyy-MM-dd HH:mm:ss.SSS"),
     revolution = round(nextRevolution(mowerEvent)),
     speed = round(nextSpeed),
     heat = round(nextHeat(mowerEvent)),
     cooling = nextCooling(mowerEvent),
-    elapsedTime = nextTimeElapse(mowerEvent)
+    elapsed = nextTimeElapse(mowerEvent),
+    version = mowerEvent.version
   )
 
 
   def nextHeat(mowerEvent: MowerEvent): Double = {
     if(mowerEvent.cooling)
-      MIN_HEAT * (1 - Math.exp( - 0.05 * mowerEvent.elapsedTime)) +
-        (MAX_HEAT * Math.exp( - 0.05 * mowerEvent.elapsedTime)) + 2 * gaussianHeat.sample(1).head
+      (MIN_HEAT + median) * (1 - Math.exp( - 0.05 * mowerEvent.elapsed)) +
+        ((MAX_HEAT + median) * Math.exp( - 0.05 * mowerEvent.elapsed)) + 2 * gaussianHeat.sample(1).head
     else
-      MIN_HEAT* Math.exp( - 0.1 * mowerEvent.elapsedTime)+
-        MAX_HEAT * (1 - Math.exp( - 0.1 * mowerEvent.elapsedTime)) + 2 * gaussianHeat.sample(1).head
+      (MIN_HEAT + median) * Math.exp( - 0.1 * mowerEvent.elapsed)+
+        (MAX_HEAT + median) * (1 - Math.exp( - 0.1 * mowerEvent.elapsed)) + 2 * gaussianHeat.sample(1).head
   }
 
   def nextCooling(mowerEvent: MowerEvent): Boolean =
-    (mowerEvent.heat, mowerEvent.cooling, mowerEvent.elapsedTime) match {
-      case (heat, true, els) if heat < MIN_HEAT  & els >= 75 => false
-      case (heat, true, _) if heat > MIN_HEAT => true
-      case (heat, false, _) if heat > MAX_HEAT => true
-      case (heat, false, _) if heat < MAX_HEAT => false
+    (mowerEvent.heat, mowerEvent.cooling, mowerEvent.elapsed) match {
+      case (heat, true, els) if heat < (MIN_HEAT + median)  & els >= 55 => false
+      case (heat, true, _) if heat > (MIN_HEAT + median) => true
+      case (heat, false, _) if heat > (MAX_HEAT + median) => true
+      case (heat, false, _) if heat < (MAX_HEAT + median) => false
       case _ => false
   }
 
   def nextTimeElapse(mowerEvent: MowerEvent): Double =
     if(mowerEvent.cooling != nextCooling(mowerEvent)) 0.0
-    else mowerEvent.elapsedTime + frequency
+    else mowerEvent.elapsed + frequency
 
   def nextRevolution(mowerEvent: MowerEvent): Double = mowerEvent.revolution match {
     case r if r <= MAX_REVOLUTION => r + 500 + 100 * gaussianRevolution.sample(1).head
@@ -74,6 +78,8 @@ class MowerEventGenerator(frequency: Double) extends EventGenerator[MowerEvent]{
 
   def round(d: Double): Double =
     (d * 100.0 floor) / 100
+
+  override def build(id: String): MowerEvent = build(id, "")
 }
 
 object MowerEventGenerator {

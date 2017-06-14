@@ -2,9 +2,9 @@ package org.lmd.xke.kudu.web
 
 import org.joda.time.DateTime
 import org.lmd.xke.kudu.EventGenerator
-import org.lmd.xke.kudu.web.Browser._
-import org.lmd.xke.kudu.web.Tag._
 import org.scalacheck.Gen
+import org.lmd.xke.kudu.web.Tag._
+import org.lmd.xke.kudu.web.Browser._
 
 /**
   * Created by loicmdivad on 25/03/2017.
@@ -55,4 +55,5 @@ class TagEventGenerator extends EventGenerator[TagEvent] {
     Gen.frequency((probs.head, Chrome), (probs(1), Firefox), (probs(2), Safari), (probs(3), Opera), (probs(4), Edge))
   }
 
+  override def build(id: String, v: String): TagEvent = build(id)
 }

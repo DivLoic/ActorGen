@@ -5,17 +5,17 @@ import org.apache.avro.generic.GenericData.Record
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.producer.{Callback, KafkaProducer, ProducerRecord, RecordMetadata}
 
+import scala.collection.JavaConversions._
+
 /**
   * Created by loicmdivad on 14/02/2017.
   * Wrapper for kafka producer.
   */
 abstract class KFeeder(host: String,
-                          topic: String,
-                          keySerde: String,
-                          valueSerde: String,
-                          schemaRegistry: String) {
-
-  import scala.collection.JavaConversions._
+                       topic: String,
+                       keySerde: String,
+                       valueSerde: String,
+                       schemaRegistry: String) {
 
   lazy val logger: Logger = Logger("main")
 
@@ -26,15 +26,13 @@ abstract class KFeeder(host: String,
     "schema.registry.url" -> schemaRegistry
   ))
 
-  /**
-    *
-    * @param event
-    */
   def produce(event: GenericRecord): Unit = {
 
     val message = event.asInstanceOf[Record]
 
     val record: ProducerRecord[String, Record] = new ProducerRecord(this.topic, message)
+
+    println(record)
 
     producer.send(record, new Callback(){
       override def onCompletion(metadata: RecordMetadata, e: Exception): Unit = e match {

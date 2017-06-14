@@ -5,4 +5,5 @@ package org.lmd.xke.kudu
   */
 trait EventGenerator[T] {
   def build(id: String): T
+  def build(id: String, v: String): T
 }

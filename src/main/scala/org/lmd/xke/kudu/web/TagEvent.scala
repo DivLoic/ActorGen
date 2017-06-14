@@ -2,6 +2,7 @@ package org.lmd.xke.kudu.web
 
 import org.lmd.xke.kudu.Event
 
+
 /**
   * Created by loicmdivad on 25/03/2017.
   */
